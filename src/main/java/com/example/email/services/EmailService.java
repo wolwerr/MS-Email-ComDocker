@@ -11,6 +11,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,28 +23,40 @@ public class EmailService {
 
     private final EmailRepository emailRepository;
 
-
     private final JavaMailSender emailSender;
 
     public void sendEmail(EmailModel emailModel) {
+        if (emailModel.getEmailFrom() == null || emailModel.getEmailFrom().isEmpty()) {
+            throw new InvalidParameterException("Email from cannot be null or empty");
+        }
+        if (emailModel.getEmailTo() == null || emailModel.getEmailTo().isEmpty()) {
+            throw new InvalidParameterException("Email to cannot be null or empty");
+        }
+        if (emailModel.getSubject() == null || emailModel.getSubject().isEmpty()) {
+            throw new InvalidParameterException("Subject cannot be null or empty");
+        }
+        if (emailModel.getText() == null || emailModel.getText().isEmpty()) {
+            throw new InvalidParameterException("Message cannot be null or empty");
+        }
+        if (emailModel.getPhone() == null || emailModel.getPhone().isEmpty()) {
+            throw new InvalidParameterException("Phone cannot be null or empty");
+        }
+
         emailModel.setSendDateEmail(LocalDateTime.now());
-        try{
+        try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(emailModel.getEmailFrom());
             message.setTo(emailModel.getEmailTo());
-            message.setBcc("ricardo@dtmm.com.br");
             message.setSubject(emailModel.getSubject());
-            String emailBody = emailModel.getText() + "\nPhone: " + emailModel.getPhone();
-            message.setText(emailBody);
+            message.setText(emailModel.getText() + "\nPhone: " + emailModel.getPhone());
             emailSender.send(message);
             emailModel.setStatusEmail(StatusEmail.SENT);
             System.out.println("E-mail enviado");
-        } catch (MailException e){
+        } catch (MailException e) {
             emailModel.setStatusEmail(StatusEmail.ERROR);
-            System.out.println("Não foi possível enviar o e-mail");
+            System.out.println("Não foi possível enviar o e-mail: " + e.getMessage());
         } finally {
             emailRepository.save(emailModel);
-            return;
         }
     }
 

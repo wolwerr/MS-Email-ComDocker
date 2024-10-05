@@ -1,11 +1,9 @@
 package com.example.email.controllers;
 
 
-import com.example.email.dtos.EmailDto;
 import com.example.email.models.EmailModel;
 import com.example.email.services.EmailService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -13,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,11 +22,15 @@ public class EmailController {
     private final EmailService emailService;
 
     @PostMapping("/sending-email")
-    public ResponseEntity<EmailModel> sendingEmail(@RequestBody @Valid EmailDto emailDto) {
+    public ResponseEntity<EmailModel> sendingEmail(String emailFrom, String emailTo, String phone, String subject, String message) {
         EmailModel emailModel = new EmailModel();
-        BeanUtils.copyProperties(emailDto, emailModel);
+        emailModel.setEmailFrom(emailFrom);
+        emailModel.setEmailTo(emailTo);
+        emailModel.setPhone(phone);
+        emailModel.setSubject(subject);
+        emailModel.setText(message);
         emailService.sendEmail(emailModel);
-        return new ResponseEntity<>(emailModel, HttpStatus.CREATED);
+        return ResponseEntity.ok(emailModel);
     }
 
     @GetMapping("/emails")
